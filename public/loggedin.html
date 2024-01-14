@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="sv">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blogg-inloggad</title>
+  <style>
+    body {
+      background-color: #f9e6e9;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #ff9dbb;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      color: #fff;
+    }
+
+    article {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: #fff;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>Välkommen till din blogg!</h1>
+
+    <div class="loggedinusername">Här kommer användarnamnet visas för en inloggad användare</div>
+    <br>
+    <br>
+    <a href="/post">Skapa nytt inlägg</a>
+    <script type="text/javascript" defer>
+
+      fetch("/api/session")
+        .then((response) => {
+          return response.text()
+        })
+        .then((username) => {
+          document.getElementsByClassName("loggedinusername")[0].innerHTML = username;
+        })
+
+      fetch("/api/posts")
+        .then((response) => {
+          return response.json()
+        })
+        .then((posts) => {
+          let postsHtml = "";
+          for (let index = 0; index < posts.length; index++) {
+            const post = posts[index];
+
+            const postDate = new Date(post.date);
+
+            const year = postDate.getFullYear();
+            let month = postDate.getMonth() + 1;
+            if (month < 10) {
+              month = "0" + month;
+            }
+            let day = postDate.getDate();
+            if (day < 10) {
+              day = "0" + day;
+            }
+
+            const time = postDate.toLocaleTimeString("sv-SE");
+
+            const formatDate = year + "-" + month + "-" + day + " " + time;
+
+            postsHtml += "<article> <h2>" + post.title + " - " + post.user + " - " + formatDate + "</h2> <p>" + post.text + "</p> ";
+
+            if (post.myPost) {
+              postsHtml += "<form action='/api/posts/" + post.id + "' method='post'> <input type='submit' value='Radera'/> </form>";
+            }
+
+            postsHtml += "</article>";
+
+            // lätt till post.text samt post.user och post.date
+
+          }
+          document.getElementsByClassName("postscontent")[0].innerHTML = postsHtml;
+        })
+    </script>
+
+
+  </header>
+
+
+  <main class="postscontent">
+    <article>
+      <h2>Blogginlägg 1</h2>
+    </article>
+
+    <article>
+      <h2>Blogginlägg 2</h2>
+    </article>
+
+    <article>
+      <h2>Blogginlägg 3</h2>
+    </article>
+
+    <article>
+      <h2>Blogginlägg 4</h2>
+    </article>
+  </main>
+
+  <form action="/api/logout" method="post">
+    <input type="submit" value="Logga ut" />
+  </form>
+
+
+</body>
+
+</html>

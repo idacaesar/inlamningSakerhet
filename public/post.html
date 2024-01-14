@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="sv">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blogg-skapa inlägg</title>
+  <style>
+    body {
+      background-color: #f9e6e9;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #ff9dbb;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      color: #fff;
+    }
+
+    main {
+      max-width: 500px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: #fff;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>Skapa ditt inlägg</h1>
+  </header>
+
+  <main>
+    <form action="/api/posts" method="post">
+      <h3>Titel</h3>
+      <input type="text" name="title" />
+      <h3>Text</h3>
+      <textarea name="text"></textarea>
+      <br>
+      <br>
+      <input type="submit" value="Skapa nytt inlägg" />
+    </form>
+
+  </main>
+
+</body>
+
+</html>
