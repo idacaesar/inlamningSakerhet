@@ -47,11 +47,23 @@
       <textarea name="text"></textarea>
       <br>
       <br>
+      <input type="hidden" id="csrf-token" name="_csrf">
       <input type="submit" value="Skapa nytt inlägg" />
     </form>
 
   </main>
+  <script type="text/javascript" defer>
 
+    fetch("/api/session", {
+      credentials: 'include'
+    })
+      .then((response) => {
+        return response.json()
+      })
+      .then((session) => {
+        document.getElementById('csrf-token').value = session.csrfToken;
+      })
+  </script>
 </body>
 
 </html>

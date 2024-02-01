@@ -41,15 +41,28 @@
     <div class="loggedinusername">Här kommer användarnamnet visas för en inloggad användare</div>
     <br>
     <br>
+    <input type="hidden" id="csrf-token">
     <a href="/post">Skapa nytt inlägg</a>
     <script type="text/javascript" defer>
 
-      fetch("/api/session")
+      let socket = new WebSocket("ws://localhost:3000/likes");
+
+      function likePost(postId) {
+        socket.send(JSON.stringify({
+          postId: postId
+        }))
+      }
+
+      fetch("/api/session", {
+        credentials: 'include'
+      })
         .then((response) => {
-          return response.text()
+          return response.json()
         })
-        .then((username) => {
-          document.getElementsByClassName("loggedinusername")[0].innerHTML = username;
+        .then((session) => {
+          const userType = session.admin ? " (admin)" : "";
+          document.getElementsByClassName("loggedinusername")[0].innerHTML = session.username + userType;
+          document.getElementById('csrf-token').value = session.csrfToken;
         })
 
       fetch("/api/posts")
@@ -77,10 +90,32 @@
 
             const formatDate = year + "-" + month + "-" + day + " " + time;
 
-            postsHtml += "<article> <h2>" + post.title + " - " + post.user + " - " + formatDate + "</h2> <p>" + post.text + "</p> ";
+            postsHtml += "<article> <h2>" + escapeHtml(post.title) + " - " + escapeHtml(post.user) + " - " + formatDate + "</h2> <p>" + escapeHtml(post.text) + "</p> ";
 
-            if (post.myPost) {
-              postsHtml += "<form action='/api/posts/" + post.id + "' method='post'> <input type='submit' value='Radera'/> </form>";
+            postsHtml += "<h4>Kommentarer:</h4>";
+
+            postsHtml += "<ul>";
+            post.comments?.forEach((comment) => {
+              postsHtml += "<li>" + escapeHtml(comment.text) + " (" + escapeHtml(comment.user) + ")</li>";
+            })
+            postsHtml += "</ul>"
+
+
+            postsHtml += "<input type='button' value='Gilla' onclick='likePost(\"" + post.id + "\")' />";
+
+            postsHtml += "<h4>Gillat av:</h4>";
+
+            postsHtml += "<ul class='likes' data-postid='" + post.id + "'>";
+            post.likes?.forEach((like) => {
+              postsHtml += "<li>" + escapeHtml(like.user) + "</li>";
+            })
+            postsHtml += "</ul>"
+
+            postsHtml += "<form action='/api/posts/" + post.id + "/comment' method='post'> <input type='text' name='text'/> <input type='submit' value='Kommentera'/> </form>";
+
+
+            if (post.canDeletePost) {
+              postsHtml += "<form action='/api/posts/" + post.id + "/delete' method='post'> <input type='submit' value='Radera'/> </form>";
             }
 
             postsHtml += "</article>";
@@ -90,6 +125,37 @@
           }
           document.getElementsByClassName("postscontent")[0].innerHTML = postsHtml;
         })
+
+      socket.onopen = function (e) {
+        console.log("webbsocket startad");
+      };
+
+      socket.onmessage = function (event) {
+        console.log("webbsocket tog emot" + event.data);
+        const likeObject = JSON.parse(event.data);
+        console.log(likeObject);
+        let likesElement = document.body.querySelector(".likes[data-postid='" + likeObject.postId + "']")
+        let likeLi = document.createElement("li");
+        likeLi.appendChild(document.createTextNode(likeObject.user));
+        likesElement.append(likeLi);
+      };
+
+      socket.onclose = function (event) {
+        console.log("Webbsocket stoppad");
+      };
+
+      socket.onerror = function (error) {
+        console.log("Webbsocket fel: " + error);
+      };
+
+      function escapeHtml(unsafe) {
+        return unsafe
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
     </script>
 
 
